@@ -1,21 +1,14 @@
-# final
-from datetime import datetime
 from flask import Flask, render_template, request
+from PIL import Image, ImageEnhance, ImageFilter, ImageDraw, ImageFont
 import pytesseract
-from PIL import Image, ImageEnhance, ImageFilter, ImageDraw ,ImageFont
-import re
 import pandas as pd
+import re
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime
 import time
 
-# Set the Tesseract executable path
-pytesseract.pytesseract.tesseract_cmd = r'C:\Users\freedom\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
-
 app = Flask(__name__)
-
-# Route for rendering the HTML page
-@app.route('/')
-def index():
-    return render_template('upload.html')
 
 # Function to preprocess the image for better OCR results
 def preprocess_image(image):
@@ -28,22 +21,7 @@ def preprocess_image(image):
     image = image.filter(ImageFilter.SHARPEN)
     return image
 
-# # Function to extract titles and paragraphs from the OCR text
-# def parse_news(text):
-#     # Updated regex pattern for identifying titles followed by paragraphs
-#     news_pattern = re.compile(r'([A-Za-z0-9 @.]+): (.+?)(?=\n[A-Za-z0-9 @.]+:|\Z)', re.DOTALL)
-#     matches = news_pattern.findall(text)
-#
-#     news = []
-#     for match in matches:
-#         title = match[0].strip()
-#         paragraph = match[1].strip().replace('\n', ' ')
-#         news.append({"title": title, "paragraph": paragraph})
-#
-#     return news
-# Function to extract titles and paragraphs from the OCR text
 def parse_news(text):
-    # Updated regex pattern for identifying titles followed by paragraphs
     news_pattern = re.compile(r'([A-Za-z0-9 .@]+):\s*(.+?)(?=\s*(?:@|[A-Za-z0-9 .]+:|\Z))', re.DOTALL)
     matches = news_pattern.findall(text)
 
@@ -54,52 +32,201 @@ def parse_news(text):
         news.append({"title": title, "paragraph": paragraph})
     return news
 
+@app.route('/')
+def home():
+    return render_template('home.html')
 
-# Route for file upload and processing
-@app.route('/upload', methods=['POST'])
+# @app.route('/upload', methods=['GET', 'POST'])
+# def upload_file():
+#     if request.method == 'POST':
+#         if 'documents' not in request.files:
+#             return render_template('screenshot.html', error_msg='No files uploaded')
+#
+#         files = request.files.getlist('documents')
+#         if not files:
+#             return render_template('screenshot.html', error_msg='No files selected')
+#
+#         all_news = []
+#         try:
+#             for file in files:
+#                 if file.filename == '':
+#                     continue
+#
+#                 image = Image.open(file.stream)
+#                 image = preprocess_image(image)
+#                 extracted_text = pytesseract.image_to_string(image)
+#                 news = parse_news(extracted_text)
+#                 all_news.extend(news)
+#
+#             if not all_news:
+#                 return render_template('screenshot.html', error_msg='No valid news found in the images')
+#
+#             image_path = r"E:\Stock News\StockNews App - Copy\sample_background_news.jpeg"
+#             draw_wrapped_text_on_image(all_news, image_path)  # Use a background image path here
+#             return render_template('screenshot.html', news=all_news)
+#
+#         except Exception as e:
+#             return render_template('screenshot.html', error_msg=f'Error processing files: {str(e)}')
+#
+#     return render_template('screenshot.html')
+# @app.route('/upload', methods=['GET', 'POST'])
+# def upload_file():
+#     if request.method == 'POST':
+#         if 'documents' not in request.files:
+#             return render_template('screenshot.html', error_msg='No files uploaded')
+#
+#         files = request.files.getlist('documents')
+#         if not files:
+#             return render_template('screenshot.html', error_msg='No files selected')
+#
+#         all_news = []
+#         image_paths = []  # List to store paths of generated images
+#         try:
+#             for file in files:
+#                 if file.filename == '':
+#                     continue
+#
+#                 image = Image.open(file.stream)
+#                 image = preprocess_image(image)
+#                 extracted_text = pytesseract.image_to_string(image)
+#                 news = parse_news(extracted_text)
+#                 all_news.extend(news)
+#
+#             if not all_news:
+#                 return render_template('screenshot.html', error_msg='No valid news found in the images')
+#
+#             image_path = r"E:\Stock News\StockNews App\sample_background_news.jpeg"
+#             image_paths = draw_wrapped_text_on_image(all_news, image_path)  # Generate images
+#
+#             return render_template('screenshot.html', news=all_news, image_paths=image_paths)  # Pass the image paths
+#
+#         except Exception as e:
+#             return render_template('screenshot.html', error_msg=f'Error processing files: {str(e)}')
+#
+#     return render_template('screenshot.html')
+
+@app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
-    if 'documents' not in request.files:
-        return render_template('upload.html', error_msg='No files uploaded')
+    if request.method == 'POST':
+        if 'documents' not in request.files:
+            return render_template('screenshot.html', error_msg='No files uploaded')
 
-    files = request.files.getlist('documents')
-    if not files:
-        return render_template('upload.html', error_msg='No files selected')
+        files = request.files.getlist('documents')
+        if not files:
+            return render_template('screenshot.html', error_msg='No files selected')
 
-    all_news = []
+        all_news = []
+        image_paths = []  # Store paths of generated images
+        try:
+            for file in files:
+                if file.filename == '':
+                    continue
 
-    # Process each image file using Tesseract OCR
-    try:
-        for file in files:
-            if file.filename == '':
-                continue  # Skip empty filenames
+                image = Image.open(file.stream)
+                image = preprocess_image(image)
+                extracted_text = pytesseract.image_to_string(image)
+                news = parse_news(extracted_text)
+                all_news.extend(news)
+                # print("Scraped News:", all_news)
 
-            image = Image.open(file.stream)
-            image = preprocess_image(image)  # Preprocess the image
-            extracted_text = pytesseract.image_to_string(image)
+            if not all_news:
+                return render_template('screenshot.html', error_msg='No valid news found in the images')
 
-            # Print the raw extracted text to the console for debugging
-            print("Extracted Text:", extracted_text)
+            image_path = r"E:\Stock News\StockNews App\sample_background_news.jpeg"
+            image_paths = ['images/stocknews_1.jpg', 'images/stocknews_2.jpg']
+            draw_wrapped_text_on_image(all_news, image_path)  # Generate images
+            return render_template('screenshot.html', news=all_news, image_paths=image_paths)  # Pass the image paths
 
-            # Parse the extracted text for news titles and paragraphs
-            news = parse_news(extracted_text)
+        except Exception as e:
+            return render_template('screenshot.html', error_msg=f'Error processing files: {str(e)}')
 
-            # Print the fetched news to the console for debugging
-            print("Fetched News:", news)
+    return render_template('screenshot.html')
+#
+# @app.route('/customurl', methods=['GET', 'POST'])
+# def url_generation():
+#     if request.method == 'POST':
+#         url = request.form.get('url')
+#         if url:
+#             scraper = MarketScraper(url)
+#             scraper.fetch_html()
+#             news = scraper.parse_html()
+#             print("Scraped", news)
+#             return render_template('customurl.html', news=news)
+#         else:
+#             return render_template('customurl.html', error_msg='Please enter a valid URL')
+#
+#     return render_template('customurl.html')
 
-            all_news.extend(news)  # Add news from this file to the list
+@app.route('/customurl', methods=['GET', 'POST'])
+def url_generation():
+    if request.method == 'POST':
+        url = request.form.get('url')
+        if url:
+            try:
+                # Initialize the scraper with the provided URL
+                scraper = MarketScraper(url)
+                scraper.fetch_html()  # Fetch HTML from the URL
+                news = scraper.parse_html()  # Parse the HTML to get news items
 
-        if not all_news:
-            return render_template('upload.html', error_msg='No valid news found in the images')
-        image_path = r"E:\Stock News\StockNews App\sample_background_news.jpeg"
-        draw_wrapped_text_on_image(all_news, image_path)  # Use a background image path here
+                image_path = r"E:\Stock News\StockNews App\sample_background_news.jpeg"
+                image_paths = ['images/stocknews_1.jpg', 'images/stocknews_2.jpg']
+                draw_wrapped_text_on_image(news, image_path)  # Generate images
+                return render_template('customurl.html', news=news, image_paths=image_paths)  # Pass the image paths
+                # Print the scraped news for debugging purposes
+                # print("Scraped News:", news)
 
-        # Render the page with the extracted news
-        return render_template('upload.html', news=all_news)
-    except Exception as e:
-        return render_template('upload.html', error_msg=f'Error processing files: {str(e)}')
+                # Return the parsed news to the template
+                # return render_template('customurl.html', news=news)
+            except Exception as e:
+                # Handle any exceptions raised during scraping and parsing
+                return render_template('customurl.html', error_msg=str(e))
+        else:
+            return render_template('customurl.html', error_msg='Please enter a valid URL')
+
+    # Render the template with an empty news list on GET requests
+    return render_template('customurl.html', news=[])
 
 
-def draw_wrapped_text_on_image(news_data, image_path, font_path="arial.ttf", max_images=2, line_spacing=5):
+class MarketScraper:
+
+    def __init__(self, url):
+        self.url = url
+        self.soup = None
+
+    def fetch_html(self):
+        time.sleep(5)
+        response = requests.get(self.url)
+        if response.status_code == 200:
+            self.soup = BeautifulSoup(response.content, 'html.parser')
+        else:
+            raise Exception(f"Failed to retrieve data from {self.url}, Status Code: {response.status_code}")
+
+    def parse_html(self):
+        if not self.soup:
+            raise Exception("HTML content not fetched. Call fetch_html() first.")
+        heading = self.soup.find('h2', string="Stocks To Watch")
+        if not heading:
+            raise Exception("'Stocks To Watch' section not found.")
+
+        news_items = heading.find_next('ul').find_all('li')
+        news = []
+
+        for item in news_items:
+            # Extract the title from the strong tag
+            title_tag = item.find('strong')
+            title = title_tag.text.strip() if title_tag else ""
+
+            # Extract the paragraph text only (no HTML tags)
+            paragraph_tag = item.find('p')
+            paragraph = paragraph_tag.get_text(strip=True) if paragraph_tag else ""
+
+            # Append the title and paragraph as a dictionary to the news list
+            news.append({"title": title, "paragraph": paragraph})
+
+        print("news ", news)
+        return news
+
+def draw_wrapped_text_on_image(news_data, image_path, font_path="arial.ttf", max_images=3, line_spacing=5):
 
     # df = self.df
     # df['body'] = df['body'].str.strip().str.replace(r'\s+', ' ', regex=True)
@@ -250,9 +377,9 @@ def draw_wrapped_text_on_image(news_data, image_path, font_path="arial.ttf", max
             # Draw the date before saving the image
             draw.text(date_position, current_date, font=date_font, fill="white", weight="5")  # Draw date
 
-            image.save(f"E:\Stock News\StockNews App\stocknews_{image_counter}.jpg")
+            image.save(f"E:\Stock News\StockNews App - Copy\static\images\stocknews_{image_counter}.jpg")
             image_paths.append(
-                f"E:\Stock News\StockNews App\stocknews_{image_counter}.jpg")  # Add the image path to the list
+                f"E:\Stock News\StockNews App - Copy\static\images\stocknews_{image_counter}.jpg")  # Add the image path to the list
             print(f"Image {image_counter} created successfully!")
             image_counter += 1
             if image_counter > max_images:  # Stop after the specified max number of images
@@ -268,7 +395,7 @@ def draw_wrapped_text_on_image(news_data, image_path, font_path="arial.ttf", max
     # Draw the date on the last image if it hasn't been saved
     if image_counter <= max_images:
         draw.text(date_position, current_date, font=date_font, fill="white", weight="5")  # Draw date
-        final_image_path = f"E:\Stock News\StockNews App\stocknews_{image_counter}.jpg"
+        final_image_path = f"E:\Stock News\StockNews App - Copy\static\images\stocknews_{image_counter}.jpg"
         image.save(final_image_path)
         image_paths.append(final_image_path)  # Add the last image path to the list
         print(f"Image {image_counter} created successfully!")

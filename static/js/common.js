@@ -25,7 +25,7 @@ $(document).ready(function() {
         }
     });
 
-    // Loader functions (if you have implemented loading overlay)
+    // Loader functions
     function showLoader() {
         $("#loader-overlay").show();
     }
@@ -38,18 +38,11 @@ $(document).ready(function() {
     $('#uploadForm').on('submit', function() {
         showLoader();
     });
-});
-
 
     // Hide loader when window loads
     $(window).on('load', function() {
         hideLoader();
     });
-
-    // Hide loader function
-    function hideLoader() {
-        $("#loader-overlay").hide();
-    }
 
     // Auto-hide alert messages
     function removeAlert() {

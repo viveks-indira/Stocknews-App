@@ -1,0 +1,92 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Upload Screenshots</title>-->
+<!--    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">-->
+<!--</head>-->
+<!--<body>-->
+<!--    <header>-->
+<!--        <h1>Upload Your Screenshots</h1>-->
+<!--    </header>-->
+<!--    <main>-->
+<!--        {% if error_msg %}-->
+<!--            <p class="error">{{ error_msg }}</p>-->
+<!--        {% endif %}-->
+<!--        {% if news %}-->
+<!--            <h2>Extracted News:</h2>-->
+<!--            <ul>-->
+<!--                {% for item in news %}-->
+<!--                    <li><strong>{{ item.title }}</strong>: {{ item.paragraph }}</li>-->
+<!--                {% endfor %}-->
+<!--            </ul>-->
+<!--        {% endif %}-->
+<!--        <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data">-->
+<!--            <input type="file" name="documents" multiple>-->
+<!--            <button type="submit">Upload</button>-->
+<!--        </form>-->
+<!--        <a href="{{ url_for('home') }}">Back to Home</a>-->
+<!--    </main>-->
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Screenshots</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Upload Your Screenshots</h1>
+    </header>
+    <main>
+        {% if error_msg %}
+            <p class="error">{{ error_msg }}</p>
+        {% endif %}
+        {% if news %}
+            <h2>Extracted News:</h2>
+            <ul>
+                {% for item in news %}
+                    <li><strong>{{ item.title }}</strong>: {{ item.paragraph }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data">
+            <input type="file" name="documents" multiple>
+            <button type="submit">Upload</button>
+        </form>
+        <a href="{{ url_for('home') }}">Back to Home</a>
+
+        {% if image_paths %}
+            <h2>Generated Images:</h2>
+<!--                <ul>-->
+<!--                    {% for image_path in image_paths %}-->
+<!--                        <li>-->
+<!--                            <img src="{{ url_for('static', filename=image_path) }}" alt="Generated Image" style="max-width: 300px;">-->
+<!--                            <br>-->
+<!--                            &lt;!&ndash; Ensure the download link points directly to the image file &ndash;&gt;-->
+<!--                            <a href="{{ url_for('static', filename=image_path) }}" download="{{ image_path.split('/')[-1] }}">Download Image</a>-->
+<!--                        </li>-->
+<!--                    {% endfor %}-->
+<!--                </ul>-->
+                    <ul style="display: flex; flex-wrap: wrap; list-style-type: none; padding: 0; margin: 0;">
+                        {% for image_path in image_paths %}
+                            <li style="margin: 10px; text-align: center;">
+                                <img src="{{ url_for('static', filename=image_path) }}" alt="Generated Image" style="max-width: 300px;">
+                                <br>
+                                <a href="{{ url_for('static', filename=image_path) }}" download="{{ image_path.split('/')[-1] }}">Download Image</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+
+        {% endif %}
+
+
+    </main>
+</body>
+</html>
+
