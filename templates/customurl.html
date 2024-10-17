@@ -1,0 +1,82 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Fetch News from URL</title>-->
+<!--    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">-->
+<!--</head>-->
+<!--<body>-->
+<!--    <header>-->
+<!--        <h1>Fetch News from URL</h1>-->
+<!--    </header>-->
+<!--    <main>-->
+<!--        {% if error_msg %}-->
+<!--            <p class="error">{{ error_msg }}</p>-->
+<!--        {% endif %}-->
+<!--        {% if news %}-->
+<!--            <h2>Fetched News:</h2>-->
+<!--            <ul>-->
+<!--                {% for item in news %}-->
+<!--                    <li><strong>{{ item.title }}</strong>: {{ item.paragraph }}</li>-->
+<!--                {% endfor %}-->
+<!--            </ul>-->
+<!--        {% endif %}-->
+<!--        <form action="{{ url_for('url_generation') }}" method="POST">-->
+<!--            <input type="text" name="url" placeholder="Enter URL" required>-->
+<!--            <button type="submit">Fetch News</button>-->
+<!--        </form>-->
+<!--        <a href="{{ url_for('home') }}">Back to Home</a>-->
+<!--    </main>-->
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch News from URL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Fetch News from URL</h1>
+    </header>
+    <main>
+        <form action="{{ url_for('url_generation') }}" method="POST">
+            <input type="text" name="url" placeholder="Enter URL" required>
+            <button type="submit">Fetch News</button>
+        </form>
+        {% if error_msg %}
+            <p class="error">{{ error_msg }}</p>
+        {% endif %}
+        {% if news %}
+            <h2>Fetched News:</h2>
+            <ul>
+                {% set seen_titles = [] %}
+                {% for item in news %}
+                    {% if item.title not in seen_titles %}
+                        <li><strong>{{ item.title }}</strong>: {{ item.paragraph }}</li>
+                        {% set seen_titles = seen_titles + [item.title] %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if image_paths %}
+            <h2>Generated Images:</h2>
+                    <ul style="display: flex; flex-wrap: wrap; list-style-type: none; padding: 0; margin: 0;">
+                        {% for image_path in image_paths %}
+                            <li style="margin: 10px; text-align: center;">
+                                <img src="{{ url_for('static', filename=image_path) }}" alt="Generated Image" style="max-width: 300px;">
+                                <br>
+                                <a href="{{ url_for('static', filename=image_path) }}" download="{{ image_path.split('/')[-1] }}">Download Image</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+
+        {% endif %}
+        <a href="{{ url_for('home') }}">Back to Home</a>
+    </main>
+</body>
+</html>

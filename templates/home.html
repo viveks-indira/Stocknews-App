@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="box">
+       <h1>Welcome to the News Application</h1>
+       <div class="container">
+            <div class="cont">
+               <h2>Choose an Option</h2>
+               <button><a href="{{ url_for('upload_file') }}">Upload Screenshots</a></button><br>
+               <button><a href="{{ url_for('url_generation') }}">Fetch News from URL</a> </button>
+            </div>
+       </div>
+    </div>
+</body>
+</html>
